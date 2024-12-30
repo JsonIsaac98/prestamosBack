@@ -12,4 +12,7 @@ export class CreateProductoDto {
 
   @IsString()
   categoria: string;
+
+  @IsString()
+  comentario: string;
 }

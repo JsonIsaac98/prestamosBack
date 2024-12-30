@@ -1,4 +1,11 @@
-import { IsNumber, IsString } from 'class-validator';
+// src/dto/create-credito.dto.ts
+import { IsNumber, IsString, IsOptional, IsEnum } from 'class-validator';
+
+export enum EstadoCredito {
+  ACTIVO = 'ACTIVO',
+  PENDIENTE = 'PENDIENTE',
+  CANCELADO = 'CANCELADO'
+}
 
 export class CreateCreditoDto {
   @IsNumber()
@@ -18,4 +25,8 @@ export class CreateCreditoDto {
 
   @IsString()
   descripcion: string;
+
+  @IsOptional()
+  @IsEnum(EstadoCredito)
+  estado?: EstadoCredito;
 }

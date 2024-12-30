@@ -18,6 +18,9 @@ export class Producto {
   @Column()
   categoria: string;
 
+  @Column('text')
+  comentario: string;
+
   @Column({ default: true })
   activo: boolean;
 

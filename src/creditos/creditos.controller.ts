@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
 import { CreditosService } from './creditos.service';
 import { CreateCreditoDto } from '../dto/create-credito.dto';
 
@@ -24,5 +24,10 @@ export class CreditosController {
   @Get(':id/saldo')
   getSaldoPendiente(@Param('id') id: string) {
     return this.creditosService.getSaldoPendiente(+id);
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() updateCreditoDto: CreateCreditoDto) {
+    return this.creditosService.update(+id, updateCreditoDto);
   }
 }

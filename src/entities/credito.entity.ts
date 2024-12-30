@@ -1,4 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
+// src/entities/credito.entity.ts
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  OneToMany,
+  CreateDateColumn,
+  JoinColumn,
+} from 'typeorm';
 import { Cliente } from './cliente.entity';
 import { Producto } from './producto.entity';
 import { Pago } from './pago.entity';
@@ -7,12 +16,6 @@ import { Pago } from './pago.entity';
 export class Credito {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @ManyToOne(() => Cliente, cliente => cliente.creditos)
-  cliente: Cliente;
-
-  @ManyToOne(() => Producto, producto => producto.creditos)
-  producto: Producto;
 
   @Column('decimal', { precision: 10, scale: 2 })
   monto_total: number;
@@ -23,14 +26,28 @@ export class Credito {
   @Column('decimal', { precision: 10, scale: 2 })
   valor_cuota: number;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column()
+  descripcion: string;
+
+  @Column()
+  clienteId: number;
+
+  @Column()
+  productoId: number;
+
+  @CreateDateColumn()
   fecha_credito: Date;
 
   @Column({ default: 'ACTIVO' })
   estado: string;
 
-  @Column('text')
-  descripcion: string;
+  @ManyToOne(() => Cliente)
+  @JoinColumn({ name: 'clienteId' })
+  cliente: Cliente;
+
+  @ManyToOne(() => Producto)
+  @JoinColumn({ name: 'productoId' })
+  producto: Producto;
 
   @OneToMany(() => Pago, pago => pago.credito)
   pagos: Pago[];

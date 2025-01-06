@@ -12,11 +12,11 @@ import { ReportsModule } from './reports/reports.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '',
-      database: 'prestamos',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT) || 3306,
+      username: process.env.DB_USERNAME || 'user',
+      password: process.env.DB_PASSWORD || 'password',
+      database: process.env.DB_DATABASE || 'mydatabase',
       entities: ['dist/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),

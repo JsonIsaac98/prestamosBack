@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Pago } from '../entities/pago.entity';
+import { Credito } from '../entities/credito.entity';
 import { CreatePagoDto } from '../dto/create-pago.dto';
 
 @Injectable()
@@ -9,47 +10,56 @@ export class PagosService {
   constructor(
     @InjectRepository(Pago)
     private pagosRepository: Repository<Pago>,
+    @InjectRepository(Credito)
+    private creditosRepository: Repository<Credito>,
   ) {}
 
-  async create(createPagoDto: CreatePagoDto): Promise<Pago> {
-    const pago = this.pagosRepository.create({
-      ...createPagoDto,
-      credito: { id: createPagoDto.credito_id }
+  async findByCreditoId(creditoId: number) {
+    return this.pagosRepository.find({
+      where: { credito_id: creditoId },
+      order: { fecha_pago: 'DESC' }
     });
+  }
+
+  async create(createPagoDto: CreatePagoDto) {
+    const credito = await this.creditosRepository.findOne({
+      where: { id: createPagoDto.credito_id }
+    });
+
+    if (!credito) {
+      throw new NotFoundException(`Crédito #${createPagoDto.credito_id} no encontrado`);
+    }
+
+    if (credito.estado === 'PAGADO') {
+      throw new BadRequestException('Este crédito ya está pagado');
+    }
+
+    if (createPagoDto.monto > credito.saldo_pendiente) {
+      throw new BadRequestException(`El monto del pago (${createPagoDto.monto}) excede el saldo pendiente (${credito.saldo_pendiente})`);
+    }
+
+    const pago = this.pagosRepository.create(createPagoDto);
     return this.pagosRepository.save(pago);
   }
 
-  async findByCredito(creditoId: number): Promise<Pago[]> {
-    const pagos = await this.pagosRepository.find({
-      where: { credito: { id: creditoId } },
-      relations: ['credito'],
-      order: { fecha_pago: 'DESC' }
-    });
-
-    if (!pagos.length) {
-      throw new NotFoundException(`No se encontraron pagos para el crédito #${creditoId}`);
-    }
-
-    return pagos;
-  }
-
-  async findAll(): Promise<Pago[]> {
-    return this.pagosRepository.find({
-      relations: ['credito'],
-      order: { fecha_pago: 'DESC' }
-    });
-  }
-
-  async findOne(id: number): Promise<Pago> {
+  async anularPago(id: number) {
     const pago = await this.pagosRepository.findOne({
-      where: { id },
-      relations: ['credito']
+        where: { id },
+        relations: ['credito']
     });
 
     if (!pago) {
-      throw new NotFoundException(`Pago #${id} no encontrado`);
+        throw new NotFoundException(`Pago #${id} no encontrado`);
     }
 
-    return pago;
+    if (pago.estado === 'ANULADO') {
+        throw new BadRequestException('Este pago ya está anulado');
+    }
+
+    // Actualizar estado y fecha en la misma operación
+    pago.estado = 'ANULADO';
+    pago.fecha_pago = new Date(); // Actualiza la fecha al momento de la anulación
+
+    return this.pagosRepository.save(pago);
   }
 }

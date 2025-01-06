@@ -6,6 +6,7 @@ import {
   Param,
   Put,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ClientesService } from './clientes.service';
 import { CreateClienteDto } from '../dto/create-cliente.dto';
@@ -25,6 +26,11 @@ export class ClientesController {
     return this.clientesService.findOne(+id);
   }
 
+  @Get(':id/resumen')
+  getResumen(@Param('id') id: string) {
+    return this.clientesService.getResumenCliente(+id);
+  }
+
   @Post()
   create(@Body() createClienteDto: CreateClienteDto): Promise<Cliente> {
     return this.clientesService.create(createClienteDto);
@@ -39,7 +45,7 @@ export class ClientesController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<void> {
-    return this.clientesService.remove(+id);
+  async remove(@Param('id') id: string): Promise<void> {
+    return this.clientesService.softDelete(+id);
   }
 }

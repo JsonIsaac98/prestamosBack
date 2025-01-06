@@ -1,21 +1,28 @@
-import { IsString, IsEmail, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, Length, Matches, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateClienteDto {
   @IsString()
+  @IsNotEmpty()
+  @Length(1, 100)
   nombre: string;
 
   @IsString()
-  apellido: string;
+  @IsNotEmpty()
+  @Length(8, 20)
+  telefono: string;
 
   @IsString()
-  @IsOptional()
-  telefono?: string;
-
-  @IsEmail()
-  @IsOptional()
-  email?: string;
+  @IsNotEmpty()
+  direccion: string;
 
   @IsString()
+  @IsNotEmpty()
+  @Length(13, 13)
+  @Matches(/^[0-9]+$/, { message: 'DPI debe contener solo números' })
+  dpi: string;
+
+  @IsBoolean()
   @IsOptional()
-  direccion?: string;
+  activo?: boolean;
+
 }

@@ -3,9 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClientesModule } from './clientes/clientes.module';
-import { ProductosModule } from './productos/productos.module';
 import { CreditosModule } from './creditos/creditos.module';
 import { PagosModule } from './pagos/pagos.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -20,9 +21,10 @@ import { PagosModule } from './pagos/pagos.module';
       synchronize: true,
     }),
     ClientesModule,
-    ProductosModule,
     CreditosModule,
     PagosModule,
+    DashboardModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

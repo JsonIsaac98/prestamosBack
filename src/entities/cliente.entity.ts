@@ -6,20 +6,20 @@ export class Cliente {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ length: 100 })
   nombre: string;
 
-  @Column()
-  apellido: string;
-
-  @Column({ nullable: true })
+  @Column({ length: 20 })
   telefono: string;
 
-  @Column({ nullable: true })
-  email: string;
-
-  @Column({ nullable: true })
+  @Column('text')
   direccion: string;
+
+  @Column({ length: 13, unique: true })
+  dpi: string;
+
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  saldo_total: number;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   fecha_registro: Date;

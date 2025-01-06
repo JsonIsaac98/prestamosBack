@@ -1,32 +1,27 @@
 // src/dto/create-credito.dto.ts
-import { IsNumber, IsString, IsOptional, IsEnum } from 'class-validator';
-
-export enum EstadoCredito {
-  ACTIVO = 'ACTIVO',
-  PENDIENTE = 'PENDIENTE',
-  CANCELADO = 'CANCELADO'
-}
+import { IsNumber, IsString, IsNotEmpty, Min } from 'class-validator';
 
 export class CreateCreditoDto {
   @IsNumber()
+  @IsNotEmpty()
   cliente_id: number;
 
-  @IsNumber()
-  producto_id: number;
-
-  @IsNumber()
-  monto_total: number;
-
-  @IsNumber()
-  numero_cuotas: number;
-
-  @IsNumber()
-  valor_cuota: number;
-
   @IsString()
-  descripcion: string;
+  @IsNotEmpty()
+  descripcion_articulo: string;
 
-  @IsOptional()
-  @IsEnum(EstadoCredito)
-  estado?: EstadoCredito;
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @IsNotEmpty()
+  precio_venta: number;
+
+  @IsNumber()
+  @Min(1)
+  @IsNotEmpty()
+  plazo_meses: number;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @IsNotEmpty()
+  tasa_interes: number;
 }

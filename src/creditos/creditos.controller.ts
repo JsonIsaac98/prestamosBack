@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Put } from '@nestjs/common';
 import { CreditosService } from './creditos.service';
 import { CreateCreditoDto } from '../dto/create-credito.dto';
 
@@ -6,14 +6,9 @@ import { CreateCreditoDto } from '../dto/create-credito.dto';
 export class CreditosController {
   constructor(private readonly creditosService: CreditosService) {}
 
-  @Post()
-  create(@Body() createCreditoDto: CreateCreditoDto) {
-    return this.creditosService.create(createCreditoDto);
-  }
-
   @Get()
-  findAll() {
-    return this.creditosService.findAll();
+  findAll(@Query('estado') estado?: 'ACTIVO' | 'PAGADO' | 'ATRASADO') {
+    return this.creditosService.findAll(estado);
   }
 
   @Get(':id')
@@ -21,13 +16,21 @@ export class CreditosController {
     return this.creditosService.findOne(+id);
   }
 
-  @Get(':id/saldo')
-  getSaldoPendiente(@Param('id') id: string) {
-    return this.creditosService.getSaldoPendiente(+id);
+  @Get('cliente/:clienteId')
+  findByCliente(@Param('clienteId') clienteId: string) {
+    return this.creditosService.findByCliente(+clienteId);
+  }
+
+  @Post()
+  create(@Body() createCreditoDto: CreateCreditoDto) {
+    return this.creditosService.create(createCreditoDto);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateCreditoDto: CreateCreditoDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateCreditoDto: CreateCreditoDto,
+  ){
     return this.creditosService.update(+id, updateCreditoDto);
   }
 }

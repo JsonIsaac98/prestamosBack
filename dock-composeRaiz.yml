@@ -1,4 +1,3 @@
-# docker-compose.yml
 version: '3.8'
 services:
   frontend:
@@ -39,6 +38,7 @@ services:
       - MYSQL_LOG_BIN_TRUST_FUNCTION_CREATORS=1
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     command: 
       - --default-authentication-plugin=mysql_native_password
       - --log-bin-trust-function-creators=1

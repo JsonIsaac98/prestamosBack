@@ -14,11 +14,11 @@ import { UsersModule } from './users/users.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 3306,
-      username: process.env.DB_USERNAME || 'user',
-      password: process.env.DB_PASSWORD || 'password',
-      database: process.env.DB_DATABASE || 'mydatabase',
+      host: "localhost", //process.env.DB_HOST || 'localhost',
+      port: 3306, //parseInt(process.env.DB_PORT) || 3306,
+      username: "root", //process.env.DB_USERNAME || 'user',
+      password: '', //process.env.DB_PASSWORD || 'password',
+      database: "mydatabase", //process.env.DB_DATABASE || 'mydatabase',
       entities: ['dist/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),

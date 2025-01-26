@@ -37,7 +37,7 @@ export class CreditosService {
   async findByCliente(clienteId: number) {
     return this.creditosRepository.find({
       where: { cliente_id: clienteId },
-      relations: ['pagos'],
+      relations: ['cliente', 'pagos'],
       order: { fecha_credito: 'DESC' }
     });
   }

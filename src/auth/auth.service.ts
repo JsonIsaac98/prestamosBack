@@ -20,10 +20,15 @@ export class AuthService {
     return null;
   }
 
-  async login(user: any) {
-    const payload = { username: user.username, sub: user.id, role: user.role };
+  // src/auth/auth.service.ts
+async login(user: any) {
+  const payload = { 
+      username: user.username, 
+      sub: user.id, 
+      role: user.role,
+    };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, { expiresIn: '24h' }), // o el tiempo que prefieras
     };
   }
 }

@@ -21,6 +21,11 @@ export class ClientesController {
     return this.clientesService.findAll();
   }
 
+  @Get('activos')
+  findAllIsActive(): Promise<Cliente[]> {
+    return this.clientesService.findAllIsActive();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string): Promise<Cliente> {
     return this.clientesService.findOne(+id);

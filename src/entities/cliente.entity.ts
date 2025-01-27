@@ -24,7 +24,7 @@ export class Cliente {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   fecha_registro: Date;
 
-  @Column({ default: true })
+  @Column({ type: 'boolean', default: true })
   activo: boolean;
 
   @OneToMany(() => Credito, credito => credito.cliente)

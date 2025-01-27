@@ -23,6 +23,14 @@ export class ClientesService {
     });
   }
 
+  async findAllIsActive(): Promise<Cliente[]> {
+    return this.clientesRepository.find({
+      where: {
+        activo: true
+      }
+    });
+  }
+
   async findOne(id: number): Promise<Cliente> {
     const cliente = await this.clientesRepository.findOne({
       where: { id },

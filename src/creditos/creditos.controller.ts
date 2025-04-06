@@ -1,6 +1,9 @@
+// src/creditos/creditos.controller.ts
 import { Controller, Get, Post, Body, Param, Query, Put } from '@nestjs/common';
 import { CreditosService } from './creditos.service';
 import { CreateCreditoDto } from '../dto/create-credito.dto';
+import { CreateCreditoConJoyasDto } from '../dto/create-credito-con-joyas.dto';
+import { DetalleJoyaDto } from '../dto/detalle-joya.dto';
 
 @Controller('creditos')
 export class CreditosController {
@@ -21,9 +24,16 @@ export class CreditosController {
     return this.creditosService.findByCliente(+clienteId);
   }
 
+  // Mantener el endpoint antiguo para compatibilidad
   @Post()
   create(@Body() createCreditoDto: CreateCreditoDto) {
     return this.creditosService.create(createCreditoDto);
+  }
+
+  // Nuevo endpoint para crear crédito con joyas
+  @Post('con-joyas')
+  createConJoyas(@Body() createCreditoConJoyasDto: CreateCreditoConJoyasDto) {
+    return this.creditosService.createConJoyas(createCreditoConJoyasDto);
   }
 
   @Put(':id')
@@ -32,5 +42,19 @@ export class CreditosController {
     @Body() updateCreditoDto: CreateCreditoDto,
   ){
     return this.creditosService.update(+id, updateCreditoDto);
+  }
+
+  // Endpoints para gestionar detalles de joyas en créditos existentes
+  @Get(':id/detalles-joya')
+  getDetallesJoya(@Param('id') id: string) {
+    return this.creditosService.getDetallesJoya(+id);
+  }
+
+  @Post(':id/detalles-joya')
+  agregarDetalleJoya(
+    @Param('id') id: string,
+    @Body() detalleJoyaDto: DetalleJoyaDto,
+  ) {
+    return this.creditosService.agregarDetalleJoya(+id, detalleJoyaDto);
   }
 }

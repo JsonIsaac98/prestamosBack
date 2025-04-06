@@ -2,6 +2,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Cliente } from './cliente.entity';
 import { Pago } from './pago.entity';
+import { DetalleCreditoJoya } from './detalle-credito-joya.entity';
 
 @Entity('creditos')
 export class Credito {
@@ -45,4 +46,7 @@ export class Credito {
 
   @OneToMany(() => Pago, pago => pago.credito)
   pagos: Pago[];
+
+  @OneToMany(() => DetalleCreditoJoya, detalle => detalle.credito)
+detalles_joya: DetalleCreditoJoya[];
 }

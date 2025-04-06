@@ -9,6 +9,13 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { InventarioService } from './inventario/inventario.service';
+import { InventarioModule } from './inventario/inventario.module';
+
+import { CategoriaJoya } from './entities/categoria-joya.entity';
+import { InventarioJoya } from './entities/inventario-joya.entity';
+import { DetalleCreditoJoya } from './entities/detalle-credito-joya.entity';
+import { VentasModule } from './ventas/ventas.module';
 
 @Module({
   imports: [
@@ -26,8 +33,17 @@ import { UsersModule } from './users/users.module';
       // database: process.env.DB_DATABASE || 'mydatabase',
       database: "mydatabase", //process.env.DB_DATABASE || 'mydatabase',
 
-      entities: ['dist/**/*.entity{.ts,.js}'],
+      entities: [
+        // Incluye tus entidades existentes
+        'dist/**/*.entity{.ts,.js}',
+        // También incluye las nuevas entidades explícitamente 
+        // (esto asegura que estén disponibles incluso si el patrón glob no las captura)
+        CategoriaJoya,
+        InventarioJoya,
+        DetalleCreditoJoya
+      ],
       synchronize: true,
+      autoLoadEntities: true, // Esto ayuda a asegurar que las entidades de todos los módulos se carguen
     }),
     ClientesModule,
     CreditosModule,
@@ -36,8 +52,10 @@ import { UsersModule } from './users/users.module';
     ReportsModule,
     AuthModule,
     UsersModule,
+    InventarioModule,
+    VentasModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService], // Quita InventarioService de aquí
 })
 export class AppModule {}

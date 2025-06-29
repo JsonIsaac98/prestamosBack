@@ -29,6 +29,7 @@ export class AuthService {
       cliente_id: user.clienteId
     };
     return {
+      //debe expirar en 1 minuto
       access_token: this.jwtService.sign(payload, { expiresIn: '24h' }),
     };
   }

@@ -97,7 +97,6 @@ export class VentasService {
         cliente_id: createVentaDto.cliente_id,
         descripcion_articulo: createVentaDto.descripcion_articulo,
         precio_venta: precioVentaTotal,
-        comentario: createVentaDto.comentario,
         fecha_venta: new Date()
       });
       

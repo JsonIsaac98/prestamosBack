@@ -11,10 +11,6 @@ export class CreateCreditoConJoyasDto {
   @IsNotEmpty()
   descripcion_articulo: string;
 
-  @IsBoolean()
-  @IsNotEmpty()
-  es_credito: boolean;
-
   @IsNumber()
   @Min(1)
   @IsNotEmpty()

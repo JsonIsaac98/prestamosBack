@@ -3,13 +3,16 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMan
 import { Cliente } from './cliente.entity';
 import { DetalleCreditoJoya } from './detalle-credito-joya.entity';
 
-@Entity('ventas_contado')
+@Entity('ventas')
 export class VentaContado {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   cliente_id: number;
+
+  @Column({ nullable: true })
+  credito_id: number;
 
   @Column('text')
   descripcion_articulo: string;

@@ -14,21 +14,20 @@ export class CreateVentaContadoDto {
   @IsString()
   descripcion_articulo: string;
 
-  @IsOptional()
-  @IsString()
-  comentario?: string;
+  @IsNumber()
+  precio_venta: number;
 
   @IsNumber()
   @IsOptional()
   plazo_meses?: number;
 
+  @IsNumber()
+  @IsOptional()
+  saldo_pendiente?: number;
+
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsOptional()
   tasa_interes?: number;
-
-  //default value is true
-  @IsBoolean()
-  es_credito: boolean = true;
 
   @IsArray()
   @ValidateNested({ each: true })

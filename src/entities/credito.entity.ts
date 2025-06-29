@@ -18,7 +18,7 @@ export class Credito {
   @Column('decimal', { precision: 10, scale: 2 })
   precio_venta: number;
 
-  @Column()
+  @Column({name: 'plazo_meses'})
   plazo_meses: number;
 
   @Column('decimal', { precision: 10, scale: 2 })

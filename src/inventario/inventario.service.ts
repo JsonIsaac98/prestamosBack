@@ -16,11 +16,10 @@ export class InventarioService {
     private inventarioRepository: Repository<InventarioJoya>,
   ) {}
 
-  // Métodos para categorías
+  // === CATEGORÍAS ===
   async getAllCategorias() {
     return this.categoriasRepository.find({
       order: { nombre: 'ASC' },
-      where: { activo: true },
     });
   }
 
@@ -45,7 +44,7 @@ export class InventarioService {
     return this.categoriasRepository.save(categoria);
   }
 
-  // Métodos para inventario
+  // === INVENTARIO ACTUAL ===
   async getAllInventario() {
     return this.inventarioRepository.find({
       relations: ['categoria'],
@@ -97,7 +96,7 @@ export class InventarioService {
     return this.inventarioRepository.save(inventario);
   }
 
-  // Método para verificar disponibilidad y reducir inventario
+  // === MÉTODOS REQUERIDOS POR EL SISTEMA ACTUAL ===
   async verificarDisponibilidad(inventarioId: number, gramosVendidos: number) {
     const inventario = await this.getInventarioById(inventarioId);
     
@@ -113,11 +112,10 @@ export class InventarioService {
     
     return {
       inventario,
-      precioGramo: inventario.categoria.precio_gramo,
+      precioGramo: inventario.categoria.precio_gramo || inventario.costo_adquisicion,
     };
   }
 
-  // Método para reducir el inventario después de una venta
   async reducirInventario(inventarioId: number, gramosVendidos: number) {
     const inventario = await this.getInventarioById(inventarioId);
     
@@ -129,5 +127,103 @@ export class InventarioService {
     }
     
     return this.inventarioRepository.save(inventario);
+  }
+
+  // === MÉTODOS PARA ESTADÍSTICAS BÁSICAS ===
+  async getEstadisticas() {
+    // Calcular estadísticas basadas en el inventario actual
+    const inventarios = await this.inventarioRepository.find({
+      relations: ['categoria'],
+      where: { activo: true },
+    });
+
+    const categorias = await this.categoriasRepository.find();
+    
+    const totalCategorias = categorias.length;
+    const valorTotalInventario = inventarios.reduce((total, inv) => 
+      total + (inv.gramos_disponible * inv.costo_adquisicion), 0);
+    const gramosTotales = inventarios.reduce((total, inv) => total + inv.gramos_total, 0);
+    const gramosDisponibles = inventarios.reduce((total, inv) => total + inv.gramos_disponible, 0);
+
+    return {
+      total_categorias: totalCategorias,
+      valor_total_inventario: valorTotalInventario,
+      gramos_totales: gramosTotales,
+      gramos_disponibles: gramosDisponibles,
+      movimientos_mes: 0, // Por ahora 0, se implementará con el nuevo sistema
+    };
+  }
+
+  async getEstadisticasPorCategoria() {
+    // Agrupar inventarios por categoría
+    const inventarios = await this.inventarioRepository.find({
+      relations: ['categoria'],
+      where: { activo: true },
+    });
+
+    const categoriasMap = new Map();
+
+    inventarios.forEach(inv => {
+      const categoriaId = inv.categoria_id;
+      if (!categoriasMap.has(categoriaId)) {
+        categoriasMap.set(categoriaId, {
+          id: categoriaId,
+          categoria_id: categoriaId,
+          categoria: inv.categoria,
+          gramos_total: 0,
+          gramos_disponible: 0,
+          gramos_vendido: 0,
+          costo_promedio: 0,
+          valor_total: 0,
+        });
+      }
+
+      const stats = categoriasMap.get(categoriaId);
+      stats.gramos_total += inv.gramos_total;
+      stats.gramos_disponible += inv.gramos_disponible;
+      stats.gramos_vendido += (inv.gramos_total - inv.gramos_disponible);
+      
+      // Costo promedio ponderado
+      const pesoAnterior = stats.gramos_total - inv.gramos_total;
+      if (stats.gramos_total > 0) {
+        stats.costo_promedio = (
+          (stats.costo_promedio * pesoAnterior) + 
+          (inv.costo_adquisicion * inv.gramos_total)
+        ) / stats.gramos_total;
+      }
+      
+      stats.valor_total = stats.gramos_disponible * stats.costo_promedio;
+    });
+
+    return Array.from(categoriasMap.values());
+  }
+
+  // === MÉTODOS PARA EL NUEVO DASHBOARD ===
+  async getStock() {
+    // Simular el formato del nuevo sistema usando el inventario actual
+    return this.getEstadisticasPorCategoria();
+  }
+
+  async getMovimientos(categoriaId?: number, limit?: number) {
+    // Por ahora devolver array vacío, se implementará con el nuevo sistema
+    return [];
+  }
+
+  async verificarStockDisponible(categoriaId: number, gramosRequeridos: number) {
+    // Calcular stock disponible por categoría del sistema actual
+    const inventarios = await this.inventarioRepository.find({
+      where: { 
+        categoria_id: categoriaId,
+        activo: true 
+      },
+    });
+
+    const gramosDisponibles = inventarios.reduce((total, inv) => 
+      total + inv.gramos_disponible, 0);
+
+    return {
+      disponible: gramosDisponibles >= gramosRequeridos,
+      gramos_disponibles: gramosDisponibles,
+    };
   }
 }

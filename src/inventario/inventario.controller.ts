@@ -1,24 +1,24 @@
-import { Controller, Get, Post, Body, Param, Put, UseGuards } from '@nestjs/common';
+// src/inventario/inventario.controller.ts
+import { Controller, Get, Post, Body, Param, Put, UseGuards, Query, ParseIntPipe } from '@nestjs/common';
 import { InventarioService } from './inventario.service';
 import { CreateCategoriaJoyaDto } from '../dto/create-categoria-joya.dto';
 import { CreateInventarioJoyaDto } from '../dto/create-inventario-joya.dto';
-// Importa cualquier guardia de autenticación que estés usando
 // import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('inventario')
-// @UseGuards(JwtAuthGuard) // Descomentar si usas autenticación
+// @UseGuards(JwtAuthGuard)
 export class InventarioController {
   constructor(private readonly inventarioService: InventarioService) {}
 
-  // Endpoints para categorías
+  // === CATEGORÍAS ===
   @Get('categorias')
   getAllCategorias() {
     return this.inventarioService.getAllCategorias();
   }
 
   @Get('categorias/:id')
-  getCategoriaById(@Param('id') id: string) {
-    return this.inventarioService.getCategoriaById(+id);
+  getCategoriaById(@Param('id', ParseIntPipe) id: number) {
+    return this.inventarioService.getCategoriaById(id);
   }
 
   @Post('categorias')
@@ -28,21 +28,53 @@ export class InventarioController {
 
   @Put('categorias/:id')
   updateCategoria(
-    @Param('id') id: string,
-    @Body() updateCategoriaDto: CreateCategoriaJoyaDto,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCategoriaDto: Partial<CreateCategoriaJoyaDto>,
   ) {
-    return this.inventarioService.updateCategoria(+id, updateCategoriaDto);
+    return this.inventarioService.updateCategoria(id, updateCategoriaDto);
   }
 
-  // Endpoints para inventario
+  // === ENDPOINTS ESPECÍFICOS PARA EL DASHBOARD (ANTES DE LAS RUTAS CON PARÁMETROS) ===
+  @Get('stock')
+  getStock() {
+    return this.inventarioService.getStock();
+  }
+
+  @Get('movimientos')
+  getMovimientos(
+    @Query('categoria_id') categoriaId?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.inventarioService.getMovimientos(categoriaId, limit);
+  }
+
+  @Get('verificar-stock')
+  verificarStockDisponible(
+    @Query('categoria_id', ParseIntPipe) categoriaId: number,
+    @Query('gramos_requeridos') gramosRequeridos: number,
+  ) {
+    return this.inventarioService.verificarStockDisponible(categoriaId, gramosRequeridos);
+  }
+
+  @Get('estadisticas')
+  getEstadisticas() {
+    return this.inventarioService.getEstadisticas();
+  }
+
+  @Get('estadisticas/categorias')
+  getEstadisticasPorCategoria() {
+    return this.inventarioService.getEstadisticasPorCategoria();
+  }
+
+  // === INVENTARIO GENERAL (RUTAS CON PARÁMETROS AL FINAL) ===
   @Get()
   getAllInventario() {
     return this.inventarioService.getAllInventario();
   }
 
   @Get(':id')
-  getInventarioById(@Param('id') id: string) {
-    return this.inventarioService.getInventarioById(+id);
+  getInventarioById(@Param('id', ParseIntPipe) id: number) {
+    return this.inventarioService.getInventarioById(id);
   }
 
   @Post()
@@ -52,9 +84,9 @@ export class InventarioController {
 
   @Put(':id')
   updateInventario(
-    @Param('id') id: string,
-    @Body() updateInventarioDto: CreateInventarioJoyaDto,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateInventarioDto: Partial<CreateInventarioJoyaDto>,
   ) {
-    return this.inventarioService.updateInventario(+id, updateInventarioDto);
+    return this.inventarioService.updateInventario(id, updateInventarioDto);
   }
 }

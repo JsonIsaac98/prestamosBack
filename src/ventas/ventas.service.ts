@@ -7,6 +7,12 @@ import { Cliente } from '../entities/cliente.entity';
 import { DetalleCreditoJoya } from '../entities/detalle-credito-joya.entity';
 import { CreateVentaContadoDto } from '../dto/venta-contado.dto';
 import { InventarioService } from '../inventario/inventario.service';
+import { CreateCreditoConJoyasDto } from 'src/dto/create-credito-con-joyas.dto';
+
+import { DetalleVentaJoya } from '../entities/detalle-venta-joya.entity';
+import { Credito } from '../entities/credito.entity';
+import { InventarioJoya } from '../entities/inventario-joya.entity';
+import { MovimientoInventario, TipoMovimiento } from '../entities/movimiento-inventario.entity';
 
 @Injectable()
 export class VentasService {
@@ -47,90 +53,110 @@ export class VentasService {
     });
   }
 
-  async create(createVentaDto: CreateVentaContadoDto) {
-    // Usar transacción para garantizar que todo se guarde correctamente
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    
-    try {
-      // Verificar cliente
-      const cliente = await this.clientesRepository.findOne({
-        where: { id: createVentaDto.cliente_id }
+  async createVentaContado(dto: CreateVentaContadoDto) {
+    return this.dataSource.transaction(async manager => {
+      const venta = manager.create(VentaContado, {
+        cliente_id: dto.cliente_id,
+        descripcion_articulo: dto.descripcion_articulo,
+        // guardar el precio_venta
+        precio_venta: dto.precio_venta
       });
-      if (!cliente) {
-        throw new NotFoundException(`Cliente #${createVentaDto.cliente_id} no encontrado`);
-      }
-      if (!cliente.activo) {
-        throw new BadRequestException(`Cliente #${createVentaDto.cliente_id} está inactivo`);
-      }
+      await manager.save(venta);
 
-      // Validar todos los detalles de joyas y calcular precio total
-      let precioVentaTotal = 0;
-      const detallesValidados = [];
-
-      for (const detalle of createVentaDto.detalles_joya) {
-        // Verificar disponibilidad en inventario
-        const { inventario, precioGramo } = await this.inventarioService.verificarDisponibilidad(
-          detalle.inventario_id, 
-          detalle.gramos_vendidos
-        );
-
-        // Calcular subtotales
-        const subtotalCalculado = Number(detalle.gramos_vendidos) * Number(precioGramo);
-        const subtotalFinal = detalle.precio_final || subtotalCalculado;
-        
-        // Sumar al precio total
-        precioVentaTotal += subtotalFinal;
-        
-        // Guardar para procesar después
-        detallesValidados.push({
-          ...detalle,
-          precioGramo,
-          subtotalCalculado,
-          subtotalFinal
-        });
-      }
-      
-      // Crear la venta al contado
-      const venta = this.ventasRepository.create({
-        cliente_id: createVentaDto.cliente_id,
-        descripcion_articulo: createVentaDto.descripcion_articulo,
-        precio_venta: precioVentaTotal,
-        fecha_venta: new Date()
-      });
-      
-      const ventaGuardada = await this.ventasRepository.save(venta);
-      
-      // Guardar todos los detalles
-      for (const detalle of detallesValidados) {
-        const detalleJoya = this.detalleCreditoJoyaRepository.create({
-          credito_id: ventaGuardada.id, // Usamos el mismo campo aunque sea para venta al contado
+      for (const detalle of dto.detalles_joya) {
+        const det = manager.create(DetalleVentaJoya, {
+          venta,
           inventario_id: detalle.inventario_id,
           gramos_vendidos: detalle.gramos_vendidos,
-          precio_venta_gramo: detalle.precioGramo,
-          subtotal_calculado: detalle.subtotalCalculado,
-          subtotal_final: detalle.subtotalFinal
+          precio_venta_gramo: detalle.precio_final,
+          subtotal_calculado: detalle.precio_final,
+          subtotal_final: detalle.precio_final,
         });
-        await this.detalleCreditoJoyaRepository.save(detalleJoya);
-        
-        // Reducir el inventario
-        await this.inventarioService.reducirInventario(detalle.inventario_id, detalle.gramos_vendidos);
+        await manager.save(det);
+
+        await manager.decrement(
+          InventarioJoya,
+          { id: detalle.inventario_id },
+          'gramos_disponible',
+          detalle.gramos_vendidos,
+        );
+
+        const inventario = await manager.findOne(InventarioJoya, {
+          where: { id: detalle.inventario_id },
+          relations: ['categoria'],
+        });
+
+        if (!inventario) {
+          throw new BadRequestException(`Inventario con ID ${detalle.inventario_id} no encontrado`);
+        }
+
+        const mov = manager.create(MovimientoInventario, {
+          categoria_id: inventario.categoria_id,  // ✅ este sí existe
+          tipo_movimiento: TipoMovimiento.VENTA,              // ✅ tu enum
+          gramos: detalle.gramos_vendidos,       // ✅ coincide con la entidad
+          costo_unitario: detalle.precio_final / detalle.gramos_vendidos,
+          costo_total: detalle.precio_final,
+          descripcion: `Venta joya`,
+          referencia_id: venta.id,               // ✅ referencia a la venta
+        });
+        await manager.save(mov);
       }
-      
-      // Confirmar la transacción
-      await queryRunner.commitTransaction();
-      
-      // Retornar la venta con todos sus detalles
-      return this.findOne(ventaGuardada.id);
-      
-    } catch (error) {
-      // Si hay algún error, revertir todos los cambios
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      // Liberar el queryRunner
-      await queryRunner.release();
-    }
+
+      return venta;
+    });
   }
+
+  async createVentaCredito(dto: CreateCreditoConJoyasDto) {
+    return this.dataSource.transaction(async manager => {
+      const credito = manager.create(Credito, {
+        cliente_id: dto.cliente_id,
+        descripcion_articulo: dto.descripcion_articulo,
+        precio_venta: dto.precio_venta,
+        saldo_pendiente: dto.saldo_pendiente,
+        plazo_meses: dto.plazo_meses,
+        tasa_interes: dto.tasa_interes,
+      });
+      await manager.save(credito);
+
+      for (const detalle of dto.detalles_joya) {
+        const det = manager.create(DetalleCreditoJoya, {
+          credito,
+          inventario_id: detalle.inventario_id,
+          gramos_vendidos: detalle.gramos_vendidos,
+          precio_final: detalle.precio_final,
+        });
+        await manager.save(det);
+
+        await manager.decrement(
+          InventarioJoya,
+          { id: detalle.inventario_id },
+          'gramos_disponible',
+          detalle.gramos_vendidos,
+        );
+
+        const inventario = await manager.findOne(InventarioJoya, {
+          where: { id: detalle.inventario_id },
+          relations: ['categoria'],
+        });
+
+        if (!inventario) {
+          throw new BadRequestException(`Inventario con ID ${detalle.inventario_id} no encontrado`);
+        }
+
+        const mov = manager.create(MovimientoInventario, {
+          categoria_id: inventario.categoria_id,  // ✅ este sí existe
+          tipo_movimiento: TipoMovimiento.VENTA,              // ✅ tu enum
+          gramos: detalle.gramos_vendidos,       // ✅ coincide con la entidad
+          costo_unitario: detalle.precio_final / detalle.gramos_vendidos,
+          costo_total: detalle.precio_final,
+          descripcion: `Venta joya`,
+          referencia_id: credito.id,               // ✅ referencia a la venta
+        });
+        await manager.save(mov);
+      }
+
+      return credito;
+    });
+  }
+
 }

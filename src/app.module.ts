@@ -29,7 +29,7 @@ import { VentasModule } from './ventas/ventas.module';
       // username: process.env.DB_USERNAME || 'user',
       username: "root", //process.env.DB_USERNAME || 'user',
       // password: process.env.DB_PASSWORD || 'password',
-      password: '', //process.env.DB_PASSWORD || 'password',
+      password: 'root', //process.env.DB_PASSWORD || 'password',
       // database: process.env.DB_DATABASE || 'mydatabase',
       database: "mydatabase", //process.env.DB_DATABASE || 'mydatabase',
 

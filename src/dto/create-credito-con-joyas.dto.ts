@@ -7,6 +7,16 @@ export class CreateCreditoConJoyasDto {
   @IsNotEmpty()
   cliente_id: number;
 
+  @IsNumber()
+  @Min(0)
+  @IsNotEmpty()
+  precio_venta: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsNotEmpty()
+  saldo_pendiente: number;
+
   @IsString()
   @IsNotEmpty()
   descripcion_articulo: string;

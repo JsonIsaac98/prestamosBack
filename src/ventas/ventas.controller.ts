@@ -5,6 +5,7 @@ import { CreateVentaContadoDto } from 'src/dto/venta-contado.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { CreateCreditoConJoyasDto } from '../dto/create-credito-con-joyas.dto';
 
 @Controller('ventas')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,8 +29,12 @@ export class VentasController {
   }
 
   @Post('contado')
-  @Roles('admin')
-  create(@Body() createVentaDto: CreateVentaContadoDto) {
-    return this.ventasService.create(createVentaDto);
+  createContado(@Body() dto: CreateVentaContadoDto) {
+    return this.ventasService.createVentaContado(dto);
+  }
+
+  @Post('credito')
+  createCredito(@Body() dto: CreateCreditoConJoyasDto) {
+    return this.ventasService.createVentaCredito(dto);
   }
 }

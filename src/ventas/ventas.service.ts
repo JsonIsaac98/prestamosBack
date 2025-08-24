@@ -25,6 +25,9 @@ export class VentasService {
     private detalleCreditoJoyaRepository: Repository<DetalleCreditoJoya>,
     private inventarioService: InventarioService,
     private dataSource: DataSource,
+    @InjectRepository(DetalleVentaJoya)
+    private detalleVentaJoyaRepository: Repository<DetalleVentaJoya>,
+
   ) {}
 
   async findAll() {
@@ -64,15 +67,15 @@ export class VentasService {
       await manager.save(venta);
 
       for (const detalle of dto.detalles_joya) {
-        const det = manager.create(DetalleVentaJoya, {
-          venta,
-          inventario_id: detalle.inventario_id,
-          gramos_vendidos: detalle.gramos_vendidos,
-          precio_venta_gramo: detalle.precio_final,
-          subtotal_calculado: detalle.precio_final,
-          subtotal_final: detalle.precio_final,
-        });
-        await manager.save(det);
+      const det = this.detalleVentaJoyaRepository.create({
+        venta,
+        inventario_id: detalle.inventario_id,
+        gramos_vendidos: detalle.gramos_vendidos,
+        precio_venta_gramo: detalle.precio_final,
+        subtotal_calculado: detalle.precio_final,
+        subtotal_final: detalle.precio_final,
+      });
+      await this.detalleVentaJoyaRepository.save(det);
 
         await manager.decrement(
           InventarioJoya,

@@ -2,6 +2,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, CreateDateColumn } from 'typeorm';
 import { Cliente } from './cliente.entity';
 import { DetalleCreditoJoya } from './detalle-credito-joya.entity';
+import { DetalleVentaJoya } from './detalle-venta-joya.entity';
 
 @Entity('ventas')
 export class VentaContado {
@@ -30,6 +31,6 @@ export class VentaContado {
   @JoinColumn({ name: 'cliente_id' })
   cliente: Cliente;
 
-  @OneToMany(() => DetalleCreditoJoya, detalle => detalle.credito)
-  detalles_joya: DetalleCreditoJoya[];
+  @OneToMany(() => DetalleVentaJoya, detalle => detalle.venta, { cascade: true })
+  detalles_joya: DetalleVentaJoya[];
 }

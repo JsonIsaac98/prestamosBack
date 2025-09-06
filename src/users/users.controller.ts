@@ -43,7 +43,22 @@ export class UsersController {
     return this.usersService.findOne(req.user.id);
   }
 
-  @Put('change-password')
+@Post(':id/reset-password')
+@UseGuards(JwtAuthGuard, RolesGuard) // solo admin debería poder hacerlo
+@Roles('admin')
+async resetPassword(@Param('id') clienteId: string) {
+  // buscar user que tenga este cliente_id
+  const user = await this.usersService.findByClienteId(+clienteId);
+  if (!user) {
+    throw new NotFoundException(`User not found for cliente ${clienteId}`);
+  }
+  return this.usersService.resetPassword(user.id);
+}
+
+
+
+
+  @Post('change-password')
   @UseGuards(JwtAuthGuard)
   async changePassword(
     @Request() req,
@@ -54,12 +69,14 @@ export class UsersController {
       throw new NotFoundException('User not found');
     }
 
-    return this.usersService.changePassword(
-      req.user.id,
-      changePasswordDto.oldPassword,
-      changePasswordDto.newPassword,
-    );
-  }
+  return this.usersService.changePassword(
+    req.user.id,
+    changePasswordDto.oldPassword,
+    changePasswordDto.newPassword,
+  );
+}
+
+
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)

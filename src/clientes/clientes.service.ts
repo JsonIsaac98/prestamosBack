@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Cliente } from '../entities/cliente.entity';
 import { Credito } from '../entities/credito.entity';
 import { CreateClienteDto } from '../dto/create-cliente.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class ClientesService {
@@ -12,6 +13,8 @@ export class ClientesService {
     private clientesRepository: Repository<Cliente>,
     @InjectRepository(Credito)
     private creditosRepository: Repository<Credito>,
+    // Inyectar el servicio de usuarios
+    private usersService: UsersService,
   ) {}
 
   async findAll(): Promise<Cliente[]> {
@@ -43,17 +46,17 @@ export class ClientesService {
   }
 
   async create(createClienteDto: CreateClienteDto): Promise<Cliente> {
-    // Verificar si ya existe un cliente con el mismo DPI
-    const existingCliente = await this.clientesRepository.findOne({
-      where: { dpi: createClienteDto.dpi }
-    });
-
-    if (existingCliente) {
-      throw new BadRequestException(`Ya existe un cliente con el DPI ${createClienteDto.dpi}`);
-    }
-
     const cliente = this.clientesRepository.create(createClienteDto);
-    return this.clientesRepository.save(cliente);
+    const savedCliente = await this.clientesRepository.save(cliente);
+
+    // 👇 Crear usuario automáticamente
+    await this.usersService.createForCliente(
+      savedCliente.id,
+      savedCliente.telefono,
+      `${savedCliente.telefono}@clientes.com`
+    );
+
+    return savedCliente;
   }
 
   async update(id: number, updateClienteDto: Partial<CreateClienteDto>): Promise<Cliente> {

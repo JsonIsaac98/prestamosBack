@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -13,8 +14,36 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const user = this.usersRepository.create(createUserDto);
-    // Ya no hasheamos la contraseña
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10); // 👈 10 salt rounds
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+    return this.usersRepository.save(user);
+  }
+
+  async createForCliente(clienteId: number, telefono: string, email?: string) {
+    const defaultPassword = '123456';
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+    const user = this.usersRepository.create({
+      username: telefono,
+      password: hashedPassword, // 👈 guardar hash
+      email: email ?? `${telefono}@autogen.local`,
+      role: 'client',
+      isFirstLogin: true,
+      clienteId,
+      active: true,
+    });
+
+    return this.usersRepository.save(user);
+  }
+// reset password default to '123456'
+  async resetPassword(userId: number) {
+    const user = await this.findOne(userId);
+    const defaultPassword = '123456';
+    user.password = await bcrypt.hash(defaultPassword, 10);
+    user.isFirstLogin = true;
     return this.usersRepository.save(user);
   }
 
@@ -30,17 +59,25 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { id } });
   }
 
+  async findByClienteId(clienteId: number) {
+  return this.usersRepository.findOne({ where: { clienteId } });
+}
+
+
   async changePassword(userId: number, oldPassword: string, newPassword: string) {
     const user = await this.findOne(userId);
-    
-    // Comparación directa sin bcrypt
-    if (user.password !== oldPassword) {
+
+    // Validar la contraseña vieja
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
       throw new UnauthorizedException('Current password is incorrect');
     }
 
-    user.password = newPassword;
+    // Hashear la nueva contraseña
+    user.password = await bcrypt.hash(newPassword, 10);
     user.isFirstLogin = false;
-    
+
     return this.usersRepository.save(user);
   }
+
 }

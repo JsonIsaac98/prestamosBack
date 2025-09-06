@@ -1,4 +1,5 @@
-import { IsString, IsNotEmpty, Length, Matches, IsBoolean, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, Length, Matches, IsBoolean, IsOptional, IsEmpty } from 'class-validator';
+import { IsNull } from 'typeorm';
 
 export class CreateClienteDto {
   @IsString()
@@ -16,10 +17,7 @@ export class CreateClienteDto {
   direccion: string;
 
   @IsString()
-  @IsNotEmpty()
-  @Length(13, 13)
-  @Matches(/^[0-9]+$/, { message: 'DPI debe contener solo números' })
-  dpi: string;
+  dpi?: string;
 
   @IsBoolean()
   @IsOptional()

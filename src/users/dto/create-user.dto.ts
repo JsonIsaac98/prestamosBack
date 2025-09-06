@@ -22,5 +22,5 @@ export class CreateUserDto {
 
   @IsNumber()
   @IsOptional()
-  cliente_id?: number;
+  clienteId?: number;
 }

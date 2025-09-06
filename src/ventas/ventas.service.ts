@@ -57,17 +57,16 @@ export class VentasService {
   }
 
   async createVentaContado(dto: CreateVentaContadoDto) {
-    return this.dataSource.transaction(async manager => {
-      const venta = manager.create(VentaContado, {
-        cliente_id: dto.cliente_id,
-        descripcion_articulo: dto.descripcion_articulo,
-        // guardar el precio_venta
-        precio_venta: dto.precio_venta
-      });
-      await manager.save(venta);
+  return this.dataSource.transaction(async manager => {
+    const venta = manager.create(VentaContado, {
+      cliente_id: dto.cliente_id,
+      descripcion_articulo: dto.descripcion_articulo,
+      precio_venta: dto.precio_venta
+    });
+    await manager.save(venta);
 
-      for (const detalle of dto.detalles_joya) {
-      const det = this.detalleVentaJoyaRepository.create({
+    for (const detalle of dto.detalles_joya) {
+      const det = manager.create(DetalleVentaJoya, {
         venta,
         inventario_id: detalle.inventario_id,
         gramos_vendidos: detalle.gramos_vendidos,
@@ -75,39 +74,40 @@ export class VentasService {
         subtotal_calculado: detalle.precio_final,
         subtotal_final: detalle.precio_final,
       });
-      await this.detalleVentaJoyaRepository.save(det);
+      await manager.save(det);  // 👈 usar el manager, no el repo global
 
-        await manager.decrement(
-          InventarioJoya,
-          { id: detalle.inventario_id },
-          'gramos_disponible',
-          detalle.gramos_vendidos,
-        );
+      await manager.decrement(
+        InventarioJoya,
+        { id: detalle.inventario_id },
+        'gramos_disponible',
+        detalle.gramos_vendidos,
+      );
 
-        const inventario = await manager.findOne(InventarioJoya, {
-          where: { id: detalle.inventario_id },
-          relations: ['categoria'],
-        });
+      const inventario = await manager.findOne(InventarioJoya, {
+        where: { id: detalle.inventario_id },
+        relations: ['categoria'],
+      });
 
-        if (!inventario) {
-          throw new BadRequestException(`Inventario con ID ${detalle.inventario_id} no encontrado`);
-        }
-
-        const mov = manager.create(MovimientoInventario, {
-          categoria_id: inventario.categoria_id,  // ✅ este sí existe
-          tipo_movimiento: TipoMovimiento.VENTA,              // ✅ tu enum
-          gramos: detalle.gramos_vendidos,       // ✅ coincide con la entidad
-          costo_unitario: detalle.precio_final / detalle.gramos_vendidos,
-          costo_total: detalle.precio_final,
-          descripcion: `Venta joya`,
-          referencia_id: venta.id,               // ✅ referencia a la venta
-        });
-        await manager.save(mov);
+      if (!inventario) {
+        throw new BadRequestException(`Inventario con ID ${detalle.inventario_id} no encontrado`);
       }
 
-      return venta;
-    });
-  }
+      const mov = manager.create(MovimientoInventario, {
+        categoria_id: inventario.categoria_id,
+        tipo_movimiento: TipoMovimiento.VENTA,
+        gramos: detalle.gramos_vendidos,
+        costo_unitario: detalle.precio_final / detalle.gramos_vendidos,
+        costo_total: detalle.precio_final,
+        descripcion: `Venta joya`,
+        referencia_id: venta.id,
+      });
+      await manager.save(mov);
+    }
+
+    return venta;
+  });
+}
+
 
   async createVentaCredito(dto: CreateCreditoConJoyasDto) {
     return this.dataSource.transaction(async manager => {

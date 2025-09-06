@@ -15,7 +15,7 @@ export class Cliente {
   @Column('text')
   direccion: string;
 
-  @Column({ length: 13, unique: true })
+  @Column({ length: 13, unique: false })
   dpi: string;
 
   @Column('decimal', { precision: 10, scale: 2, default: 0 })

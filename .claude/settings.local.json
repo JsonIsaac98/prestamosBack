@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install @nestjs/swagger)",
+      "Bash(npm install @nestjs/swagger --legacy-peer-deps)",
+      "Bash(node -e \"require\\(''@nestjs/swagger''\\); console.log\\(''OK'', require\\(''@nestjs/swagger/package.json''\\).version\\)\")",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npm run build)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(git add package.json package-lock.json src/main.ts src/auth/auth.controller.ts src/auth/dto/login.dto.ts src/clientes/clientes.controller.ts src/creditos/creditos.controller.ts src/dashboard/dashboard.controller.ts src/dto/create-categoria-joya.dto.ts src/dto/create-cliente.dto.ts src/dto/create-credito-con-joyas.dto.ts src/dto/create-credito.dto.ts src/dto/create-inventario-joya.dto.ts src/dto/create-pago.dto.ts src/dto/detalle-joya.dto.ts src/dto/venta-contado.dto.ts src/inventario/inventario.controller.ts src/pagos/pagos.controller.ts src/reports/reports.controller.ts src/users/dto/change-password.dto.ts src/users/dto/create-user.dto.ts src/users/users.controller.ts src/ventas/ventas.controller.ts)",
+      "Bash(git commit:*)",
+      "Bash(git push -u origin claude/nervous-williams)"
+    ]
+  }
+}

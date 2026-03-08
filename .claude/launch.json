@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "NestJS Dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:dev"],
+      "port": 3000
+    },
+    {
+      "name": "NestJS Debug",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:debug"],
+      "port": 3000
+    },
+    {
+      "name": "NestJS Prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:prod"],
+      "port": 3000
+    }
+  ]
+}
